@@ -1,0 +1,68 @@
+import numpy as np
+import pandas as pd
+import os
+
+os.chdir('C:\\Users\\Esteb\\OneDrive - unimilitar.edu.co\\Universidad\\9o Semestre\\Inteligencia Artificial\\Laboratorio\\Guía #1\\Códigos')
+
+# Fijar semilla para reproducibilidad
+np.random.seed(42)
+
+n_samples = 5000
+
+# 1. Generación de características (Features)
+carreras = np.random.choice(
+    ['Mecatronica', 'Electronica', 'Sistemas', 'Industrial'], size=n_samples
+)
+
+# Horas de estudio semanales (entre 4 y 35 horas)
+horas_estudio = np.random.normal(loc=18, scale=6, size=n_samples)
+horas_estudio = np.clip(horas_estudio, 4, 35).round(1)
+
+# Promedio acumulado previo (escala 0.0 a 5.0)
+promedio_acumulado = np.random.normal(loc=3.6, scale=0.6, size=n_samples)
+promedio_acumulado = np.clip(promedio_acumulado, 2.0, 5.0).round(2)
+
+# Porcentaje de asistencia (entre 50% y 100%)
+asistencia_pct = np.random.beta(a=7, b=2, size=n_samples) * 50 + 50
+asistencia_pct = asistencia_pct.round(1)
+
+# 2. Generación de la variable objetivo (Desempeño Académico)
+# Calculamos un puntaje interno con ponderación realista + ruido aleatorio
+score = (
+    (promedio_acumulado / 5.0) * 0.70
+    + (horas_estudio / 35.0) * 0.20
+    + (asistencia_pct / 100.0) * 0.10
+    + np.random.normal(0, 0.05, n_samples)  # Ruido
+)
+
+# Clasificación del desempeño según el puntaje
+def clasificar_desempeno(s):
+    if s < 0.58:
+        return 'Bajo'
+    elif s < 0.74:
+        return 'Medio'
+    else:
+        return 'Alto'
+
+desempeno = [clasificar_desempeno(s) for s in score]
+
+# 3. Creación del DataFrame
+df = pd.DataFrame(
+    {
+        'Carrera': carreras,
+        'Horas_Estudio_Semana': horas_estudio,
+        'Promedio_Acumulado': promedio_acumulado,
+        'Asistencia_Pct': asistencia_pct,
+        'Desempeno_Academico': desempeno,
+    }
+)
+
+# Guardar a archivo CSV
+df.to_csv('desempeno_estudiantes.csv', index=False) #DATOS DE ENTRENAMIENTO
+
+# Mostrar las primeras filas y distribución del target
+print("--- Vista previa de la base de datos ---")
+print(df.head(10))
+
+print("\n--- Distribución de la variable de desempeño ---")
+print(df['Desempeno_Academico'].value_counts())
